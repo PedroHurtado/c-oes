@@ -147,15 +147,132 @@ te avisa antes de ejecutar nada.
 
 Si vienen de Java, el alumno puede preocuparse. Conviene aclarar:
 
-- **El "diamante" es un problema cuando heredas múltiplemente de clases
-  con estado**. Si heredas solo de **interfaces puras** (todos métodos
-  virtuales puros, sin atributos), no hay diamante y no hay problema.
-- Java distingue `class`/`interface` para esto mismo. En C++ no existe la
-  palabra `interface`; usamos la convención: si todos los métodos son
-  virtuales puros y no hay estado, **es una interfaz**.
-- `virtual` en la cabecera de la herencia (`class X : virtual public IY`)
-  se reserva para los casos en que sí hay diamante con estado, que casi
-  no aparecen en patrones de diseño limpios.
+- Java distingue `class`/`interface` para evitar problemas de herencia
+  múltiple con estado. En C++ no existe la palabra `interface`; usamos
+  la convención: si todos los métodos son virtuales puros y no hay
+  estado, **es una interfaz**.
+- **Cuando heredamos solo de interfaces puras**, no aparece ningún
+  problema. La herencia múltiple es segura y natural.
+
+Pero conviene saber qué problema están evitando los lenguajes como Java al
+prohibirla, porque en C++ sí podemos meternos en él si no tenemos cuidado.
+Ese problema se llama **el diamante**.
+
+### 6.1. El problema del diamante
+
+Aparece cuando una clase hereda de **dos clases que, a su vez, heredan de
+una misma base común**. El grafo dibuja un rombo:
+
+```
+        Animal
+        /    \
+   Mamifero  Acuatico
+        \    /
+         Delfin
+```
+
+`Delfin` hereda de `Mamifero` y de `Acuatico`. Ambas heredan de `Animal`.
+Resultado: **`Delfin` tiene dos copias de `Animal` dentro**.
+
+```cpp
+class Animal {
+public:
+    std::string nombre;
+    void respirar() { std::cout << nombre << " respira\n"; }
+};
+
+class Mamifero : public Animal { };
+class Acuatico : public Animal { };
+
+class Delfin : public Mamifero, public Acuatico { };
+
+int main() {
+    Delfin d;
+    d.nombre = "Flipper";   // ❌ ambiguo: ¿el de Mamifero::Animal o Acuatico::Animal?
+    d.respirar();           // ❌ ambiguo también
+}
+```
+
+El compilador para con *"request for member 'nombre' is ambiguous"*. Dentro
+de `Delfin` hay literalmente **dos campos `nombre`**, heredados por dos
+caminos distintos. Tendrías que desambiguar:
+
+```cpp
+d.Mamifero::nombre = "Flipper";
+d.Acuatico::nombre = "Flipper";   // ¡y siguen siendo dos!
+```
+
+Absurdo. Un delfín tiene **un** nombre, no dos.
+
+### 6.2. La solución del lenguaje: `virtual` en la herencia
+
+C++ ofrece una palabra reservada para decir *"esta base es compartida,
+no la dupliques"*: se pone `virtual` en la cabecera de las herencias
+intermedias.
+
+```cpp
+class Animal {
+public:
+    std::string nombre;
+};
+
+class Mamifero : virtual public Animal { };   // ← virtual
+class Acuatico : virtual public Animal { };   // ← virtual
+
+class Delfin : public Mamifero, public Acuatico { };
+
+int main() {
+    Delfin d;
+    d.nombre = "Flipper";   // ✅ ahora solo hay un nombre
+}
+```
+
+Con `virtual`, el compilador garantiza que **`Animal` aparece una sola
+vez** dentro de `Delfin`. La ambigüedad desaparece.
+
+Pero tiene coste:
+
+- Indirección extra (un puntero a la base virtual en el layout).
+- **La clase más derivada** (`Delfin`) es responsable de construir la
+  base virtual, no las intermedias.
+
+### 6.3. Por qué en patrones limpios casi no aparece
+
+La parte importante: **el diamante solo duele cuando las clases
+intermedias tienen estado** (atributos). Si son **interfaces puras**
+— todos los métodos virtuales puros, **cero atributos** — no hay nada
+que duplicar.
+
+Mira nuestro ejemplo de impresora:
+
+```cpp
+class IImpresora { /* solo métodos = 0, sin atributos */ };
+class IEscaner   { /* solo métodos = 0, sin atributos */ };
+class IFax       { /* solo métodos = 0, sin atributos */ };
+
+class HPMultifuncion : public IImpresora, public IEscaner, public IFax { };
+```
+
+Aquí no hay diamante. Las tres interfaces:
+
+- **No comparten base** (en C++ no existe un `Object` raíz como en Java).
+- **No tienen atributos** que pudieran duplicarse.
+- Solo aportan métodos virtuales puros, que `HPMultifuncion` está
+  obligada a implementar.
+
+Esa es la razón por la que en C++ moderno, cuando la gente dice
+*"prefiere interfaces puras a herencia múltiple con estado"*, está
+esquivando exactamente este problema.
+
+### 6.4. Regla práctica para el curso
+
+- Si tus clases base son **interfaces puras** (sin atributos, todos los
+  métodos virtuales puros), **olvida que existe el diamante**.
+- Si alguna clase intermedia tiene estado y vas a heredar múltiplemente,
+  **replantéalo**: probablemente quieras composición, no herencia.
+- `virtual` en la cabecera de la herencia (`class X : virtual public Y`)
+  es un parche para cuando ya tienes el problema. En diseño nuevo, lo
+  más sano es evitar llegar a esa situación.
 
 ## 7. Bad/Good número 2: Trabajador
 
