@@ -12,10 +12,10 @@ Material de apoyo para la tercera jornada del curso (≈5 horas efectivas,
 | 3 | Factory Method                  | ~35 min              | `03_factory.md`          |
 | 4 | Builder                         | ~35 min              | `04_builder.md`          |
 | 5 | Abstract Factory                | ~35 min              | `05_abstract_factory.md` |
-| 6 | Cierre creacionales             | ~20 min              | `06_cierre_paint.md`     |
 | 7 | Adapter                         | ~35 min              | `07_adapter.md`          |
 | 8 | Decorator                       | ~35 min              | `08_decorator.md`        |
 | 9 | Composite                       | ~35 min              | `09_composite.md`        |
+| 6 | Cierre                          | ~20 min              | `06_cierre_paint.md`     |
 
 Total: ~5h efectivas. Cubre los **5 creacionales** del temario y **3
 estructurales** que ya prometí cumplir en el día 2 (Adapter, Decorator,
