@@ -55,6 +55,20 @@ esa misma biblioteca sin tocar `main`.
 
 Requisitos: CMake ≥ 3.16 y un compilador con C++17 (MSVC, g++ o clang).
 
+> **⚠️ Importante: ejecuta todos los comandos desde dentro de la carpeta
+> `paint/`** (la que contiene este `README.md` y el `CMakeLists.txt` raíz).
+> El `.` y las rutas relativas como `build` se interpretan respecto a ahí. Si los
+> lanzas desde la carpeta padre verás un error tipo
+> `Failed to change working directory to ".../build": No such file or directory`,
+> porque el `build/` se crea en `paint/build`, no en la raíz del repositorio.
+>
+> ```bash
+> cd paint     # asegúrate de estar aquí antes de nada
+> ```
+>
+> Si prefieres no entrar en la carpeta, prefija las rutas: `cmake -S paint -B paint/build`
+> y `ctest --test-dir paint/build`.
+
 ```bash
 cmake -S . -B build
 cmake --build build
