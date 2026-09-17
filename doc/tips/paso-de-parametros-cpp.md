@@ -14,8 +14,6 @@ void fn1(Foo& foo) { foo.id = 20; }
 void fn2(Foo* foo) { foo->id = 20; }
 ```
 
-> En el código original faltaba el `;` tras `foo.id=20` en `fn` y `fn1`, por lo que no compilaba tal cual.
-
 ## 2. Qué ocurre en cada función
 
 ### `fn(Foo foo)`: paso por valor
